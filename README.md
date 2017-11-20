@@ -1,7 +1,7 @@
 # kafka-diff-stream-clj
 
-A proof-of-concept Streams API processor (in Clojure) that does simple diffing.
-It listens to 
+A proof-of-concept Kafka Streams processor (in Clojure) that does simple diffing.
+Note this uses the Processor API (not the higher-level DSL).
 
 ## Usage
 
