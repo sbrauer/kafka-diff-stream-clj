@@ -103,11 +103,12 @@
   (println "Starting...")
 
   ;; Add shutdown hook to respond to SIGTERM and gracefully close Kafka Streams
-  ;; FIXME: Is this working? Not seeing println output :(
+  ;; FIXME: Ideally this would work for SIGINT as well (for example, when using `Ctrl-C` to interupt `lein run`.
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. #(do
                                 (println "Stopping...")
                                 (.close streams)
-                                (println "Bye!"))))
+                                (println "Bye!")
+                                (flush))))
 
   (.start streams))
