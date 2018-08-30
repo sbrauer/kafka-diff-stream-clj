@@ -4,8 +4,8 @@
 
 (ns kafka-diff-stream-clj.core
   (:import [org.apache.kafka.common.serialization Serdes]
-           [org.apache.kafka.streams.processor Processor ProcessorContext ProcessorSupplier TopologyBuilder]
            [org.apache.kafka.streams KafkaStreams StreamsConfig]
+           [org.apache.kafka.streams.processor Processor ProcessorContext ProcessorSupplier TopologyBuilder]
            [org.apache.kafka.streams.state Stores]))
 
 (def props
@@ -14,13 +14,12 @@
    StreamsConfig/KEY_SERDE_CLASS_CONFIG, (.getName (.getClass (Serdes/String)))
    StreamsConfig/VALUE_SERDE_CLASS_CONFIG, (.getName (.getClass (Serdes/String)))})
 
+(def config (StreamsConfig. props))
+
 (def INPUT "topic-input")
 (def OUTPUT "topic-output")
 (def STORE-NAME "Diff-Store")
 (def SCHEDULE 1000) ;; time units are normally milliseconds
-
-(def config
-  (StreamsConfig. props))
 
 (defn- print-kv-iter
   [iter]
@@ -64,6 +63,8 @@
     ;; FIXME: remove after dev
     (println "*** process ***")
     (prn {:k k :v v})
+    (prn {:offset (.offset context)
+          :timestamp (.timestamp context)})
     (print-kv-store kv-store)
 
     (let [old (.get kv-store k)]
@@ -96,14 +97,13 @@
     (.addStateStore diff-store-supplier (str-array "Process"))
     (.addSink "Sink" OUTPUT (str-array "Process")))
 
-(def streams
- (KafkaStreams. builder config))
+(def streams (KafkaStreams. builder config))
 
 (defn -main [& args]
   (println "Starting...")
 
   ;; Add shutdown hook to respond to SIGTERM and gracefully close Kafka Streams
-  ;; FIXME: Ideally this would work for SIGINT as well (for example, when using `Ctrl-C` to interupt `lein run`.
+  ;; FIXME: Ideally this would work for SIGINT as well (for example, when using `Ctrl-C` to interupt `lein run`).
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. #(do
                                 (println "Stopping...")
